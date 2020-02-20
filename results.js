@@ -62,6 +62,60 @@ var eventVariables = {
     "perPage": 25
 };
 
+var MeridaStandings = `
+query MeridaStandings($perPage: Int, $coordinates: String!, $radius: String!,$pageStanding: Int, $perPageStanding : Int) {
+  tournaments(query: {
+    perPage: $perPage
+    filter: {
+      videogameIds:1386
+      location: {
+        distanceFrom: $coordinates,
+        distance: $radius
+      }
+    }
+  }) {
+    nodes {
+      id
+      name
+      events{
+        id
+        name
+        slug
+        standings(query: {
+        perPage: $perPageStanding,
+        page: $pageStanding
+        }){
+          pageInfo{
+          total,
+          totalPages
+        }nodes {
+          placement
+          entrant {
+              id
+            name
+            participants {
+                id
+                gamerTag
+                player {
+                    id
+                }
+                  }
+          }
+      }
+    }
+  }
+    }
+}
+}`;
+const standingsVariables = {
+  "perPage": 4,
+  "coordinates": "20.967778, -89.621667",
+  "radius": "50mi",
+  "perPageStanding": 8,
+  "pageStanding": 1
+}
+
+
 await graphQLClient.request(eventQuery, eventVariables).then(async data => {
     let event = data.event;
     }).catch(err => {
@@ -114,4 +168,61 @@ function parseStandings(event) {
     }
 
     return new_standings;
+}
+
+
+
+const tournamentQuery= `
+query MeridaTournaments($perPage: Int, $coordinates: String!, $radius: String!) {
+    tournaments(query: {
+      perPage: $perPage
+      filter: {
+        videogameIds:`+  SMASH_ULTIMATE_ID + `
+        location: {
+          distanceFrom: $coordinates,
+          distance: $radius
+        }
+      }
+    }) {
+      nodes {
+        id
+        name
+        events{
+          id
+          name
+          slug
+        }
+      }
+    }
+  }`;
+
+const tournamentVariables ={
+    "perPage": 4,
+    "coordinates": MERIDA_COORDINATES,
+    "radius": RADIUS
+};
+
+
+
+
+async function main(){
+  //smashgg.initialize(TOKEN);
+  const graphQLClient = new GraphQLClient(endpoint, { 
+    credentials: "include",
+    mode: "cors",
+    headers: {
+      Authorization: `Bearer ${TOKEN}`
+    }
+  });
+    await graphQLClient.request(tournamentQuery, tournamentVariables).then(async data => {
+        let event = data.event;
+        console.log(data.tournaments.nodes[0].events);  
+    }).catch(err => {
+        console.log(err);
+    });
+
+    //for each (var tournament in data.tournaments.nodes){
+
+    //}
+    return true;
 }

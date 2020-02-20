@@ -1,0 +1,3 @@
+tournament/smash-fmat-special
+tournament/smash-nights-51
+tournament/smash-nights-50

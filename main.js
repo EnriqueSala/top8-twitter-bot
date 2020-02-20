@@ -435,8 +435,8 @@ async function hourly() {
 }
 
 async function main(){
-  var j = schedule.scheduleJob('* */1 * * *', function(){ 
-    hourly();
+  var j = schedule.scheduleJob('*/1 * * * *', function(){ 
+    postTweet("Testing from heroku", "slug");
     });
 }
 main();

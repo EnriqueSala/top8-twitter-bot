@@ -20,7 +20,6 @@
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "node-schedule": "^1.3.2",
-    "smashgg.js": "^4.1.10",
     "twitter": "^1.7.1"
   }
 }

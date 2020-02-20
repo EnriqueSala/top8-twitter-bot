@@ -1,4 +1,3 @@
-const smashgg = require('smashgg.js');
 var Twitter = require('twitter');
 var schedule = require('node-schedule');
 const fs = require('fs');

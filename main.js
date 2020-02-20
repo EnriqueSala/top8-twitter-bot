@@ -435,7 +435,7 @@ async function hourly() {
 }
 
 async function main(){
-  var j = schedule.scheduleJob('*/1 * * * *', function(){ 
+  var j = schedule.scheduleJob('* */1 * * *', function(){ 
     hourly();
     });
 }

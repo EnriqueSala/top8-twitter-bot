@@ -14,7 +14,7 @@ const graphQLClient = new GraphQLClient(endpoint, {
     Authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
   }
 });
- 
+
 var twitterClient = new Twitter({
   consumer_key: process.env.CONSUMER_KEY,
   consumer_secret: process.env.CONSUMER_SECRET,
@@ -55,7 +55,18 @@ async function getLastTournaments() {
   return slugs;
 
 }
+//returns all the events Id from multiple tournaments
+async function getAllEventsId(slugs) {
+  let eventsId = [];
+  let events = [];
 
+  for (let i = 0; i < slugs.length; i++) {
+    events = await getEventsId(slugs[i]);
+    eventsId.push(...events);
+  }
+  return eventsId;
+
+}
 
 //returns an array with tournaments that haven't been twitted
 async function findNewTournaments(slugs) {
@@ -118,9 +129,65 @@ async function getEventsId(slug) {
   const eventsIdVariables = `{
     "slug": "`+ slug + `"
   }`;
+  let eventsId = [];
 
   let data = await graphQLClient.request(eventsIdQuery, eventsIdVariables);
-  return data.tournament.events;
+
+  for (let i = 0; i < data.tournament.events.length; i++) {
+    eventsId.push(data.tournament.events[i].id);
+
+  }
+
+  return eventsId;
+}
+
+//returns an array of events that haven't been tweeted
+async function getNewEvents(eventsId) {
+  let unpostedEvents = [];
+
+  data = fs.readFileSync(FILE_LOCATION, 'utf8')
+  for (i = 0; i < eventsId.length; i++) {
+    if (!data.includes(eventsId[i])) {
+      unpostedEvents.push(eventsId[i]);
+    }
+  }
+
+  return unpostedEvents;
+}
+
+//Returns all the events with state COMPLETED
+async function getCompletedEvents(eventsId) {
+  let ids = [];
+  let eventsCompleted = [];
+  let completed;
+  for (let i = 0; i < eventsId.length; i++) {
+    event = eventsId[i];
+
+    if (await isEventCompleted(event)) {
+      eventsCompleted.push(event);
+    }
+  }
+  return eventsCompleted;
+}
+
+async function postEvents(eventsId) {
+
+  let eventId;
+  for (let i = 0; i < eventsId.length; i++) {
+    eventId = eventsId[i];
+    let standings = await getEventStandings(eventId);
+
+    let parsedStandings = parseStandings(standings);
+
+    let tweet = await writeTweet(eventId, parsedStandings);
+
+    postTweet(tweet, eventId);
+    await wait(60000);
+
+
+  }
+
+
 }
 
 //Returns all the top 8 info from an event
@@ -158,7 +225,7 @@ async function getEventStandings(eventId) {
   var eventVariables = `{
       "id": `+ eventId + `,
       "page": 1,
-      "perPage": 8
+      "perPage": `+ TOPNUMBER + `
     }`;
   let eventStandings = await graphQLClient.request(eventQuery, eventVariables);
   return eventStandings.event;
@@ -219,20 +286,42 @@ async function writeTweet(eventId, new_standings) {
 
   for (let i = 0; i < new_standings.length; i++) {
     let standing = new_standings[i];
-
     //get player twitter handle or gamertag
-    let player = await getPlayerInfo(standing.player_id);
     let placement = standing.placement;
-    if (player) {
-      if (player.twitterHandle) {
-        results += placement + ": @" + player.twitterHandle + "\n";
+    if (new_standings.doubles) {
+
+      let player_1 = await getPlayerInfo(standing.player_1_id);
+      let player_2 = await getPlayerInfo(standing.player_2_id);
+
+      //Writes the players twitters and/or their tags
+      if (player_1 && player_2) {
+        results += placement + ": ";
+        if (player_1.twitterHandle) {
+          results += "@" + player_1.twitterHandle
+        } else {
+          results += player_1.gamerTag;
+        }
+        if (player_2.twitterHandle) {
+          results += " / @" + player_2.twitterHandle + "\n";
+        } else {
+          results += " / " + player_2.gamerTag + "\n";
+        }
       } else {
-        results += placement + ": " + player.gamerTag + "\n";
+        results += placement + ": " + standing.name + "\n";
       }
     } else {
-      results += placement + ": " + standing.name + "\n";
-    }
+      let player = await getPlayerInfo(standing.player_id);
+      if (player) {
+        if (player.twitterHandle) {
+          results += placement + ": @" + player.twitterHandle + "\n";
+        } else {
+          results += placement + ": " + player.gamerTag + "\n";
+        }
+      } else {
+        results += placement + ": " + standing.name + "\n";
+      }
 
+    }
   }
 
   //add tournament link
@@ -294,6 +383,8 @@ async function writeTweetFake(eventId, new_standings) {
 
   return results;
 }
+
+//formats the standings so they are easier to post
 function parseStandings(event) {
   let event_id = event.id;
   let standings = [];
@@ -339,14 +430,18 @@ function parseStandings(event) {
   }
   return new_standings;
 }
-async function postTweet(tweet,slug) {
-  twitterClient.post('statuses/update', {status: tweet}, (err,tweet,res) =>{
-    if(err) throw err;
+
+//Tweets the string it gets and writes the other string into a txt file
+async function postTweet(tweet, slug) {
+  twitterClient.post('statuses/update', { status: tweet }, (err, tweet, res) => {
+    if (err) throw err;
     addPostedTournaments(slug + "\n");
   });
-  
+
 
 }
+
+
 async function addPostedTournaments(tournaments) {
   fs.appendFile(FILE_LOCATION, tournaments, function (err) {
     if (err) return console.error(err);
@@ -373,6 +468,12 @@ async function postTournaments(slugs) {
   }
 }
 
+//async version of setTimeout 
+async function wait(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
 
 async function getEventStandings(eventId) {
   var eventQuery = `
@@ -418,12 +519,11 @@ async function hourly() {
   try {
 
     let lastTournaments = await getLastTournaments();
-
-    let newTournaments = await findNewTournaments(lastTournaments);
-    let newFinishedTournaments = await getFinishedTournaments(newTournaments);
-
-    if (newFinishedTournaments) {
-      postTournaments(newFinishedTournaments);
+    let lastEvents = await getAllEventsId(lastTournaments);
+    let newEvents = await getNewEvents(lastEvents);
+    let newCompletedEvents = await getCompletedEvents(newEvents);
+    if (newCompletedEvents) {
+      postEventsFake(newCompletedEvents);
     }
   } catch (err) {
     console.log(err);
@@ -434,9 +534,9 @@ async function hourly() {
 
 }
 
-async function main(){
-  var j = schedule.scheduleJob('* */1 * * *', function(){ 
+async function main() {
+  var j = schedule.scheduleJob('* */1 * * *', function () {
     hourly();
-    });
+  });
 }
 main();

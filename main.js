@@ -475,6 +475,28 @@ async function wait(ms) {
   });
 }
 
+//returns true if events is marked as completed
+async function isEventCompleted(eventId) {
+  const eventQuery = `
+  query EventStandings($eventId: ID!) {
+    event(id: $eventId) {
+      state
+      slug
+    }
+  }`;
+
+  const eventVariables = `
+  {
+    "eventId": `+ eventId + `
+  }`
+  let data = await graphQLClient.request(eventQuery, eventVariables);
+
+
+  if (data.event.state != "COMPLETED") {
+    return false;
+  } else return true;
+
+}
 async function getEventStandings(eventId) {
   var eventQuery = `
   query EventQuery($id: ID!, $page: Int, $perPage: Int) { 

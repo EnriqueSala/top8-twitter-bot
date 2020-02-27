@@ -1,5 +1,6 @@
 var Twitter = require('twitter');
 var schedule = require('node-schedule');
+const { Client } = require('pg');
 const fs = require('fs');
 const SMASH_ULTIMATE_ID = 1386;
 const { GraphQLClient } = require('graphql-request');
@@ -13,6 +14,14 @@ const graphQLClient = new GraphQLClient(endpoint, {
   headers: {
     Authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
   }
+});
+const dbClient = new Client({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'Events',
+  password: 'password',
+  port: 5432
+
 });
 
 var twitterClient = new Twitter({
@@ -142,12 +151,26 @@ async function getEventsId(slug) {
 }
 
 //returns an array of events that haven't been tweeted
-async function getNewEvents(eventsId) {
+async function getNewEvents(eventsId){
   let unpostedEvents = [];
-
-  data = fs.readFileSync(FILE_LOCATION, 'utf8')
+  let events =[];
+  const dbClient = new Client({
+    user: process.env.USER,
+    host: process.env.HOST,
+    database: process.env.DATABASE,
+    password: process.env.PASSWORD,
+    port: process.env.PORT
+  
+  });
+  await dbClient.connect();
+  let res = await dbClient.query('SELECT number FROM event');
+  console.log(res.rows);
+  dbClient.end();
+  res.rows.forEach(element => {
+    events.push(element.number);
+  });
   for (i = 0; i < eventsId.length; i++) {
-    if (!data.includes(eventsId[i])) {
+    if (!events.includes(eventsId[i])) {
       unpostedEvents.push(eventsId[i]);
     }
   }
@@ -442,10 +465,25 @@ async function postTweet(tweet, slug) {
 }
 
 
-async function addPostedTournaments(tournaments) {
-  fs.appendFile(FILE_LOCATION, tournaments, function (err) {
-    if (err) return console.error(err);
-  });
+async function addPostedTournaments(event) {
+  const dbClient = new Client({
+      user: process.env.USER,
+      host: process.env.HOST,
+      database: process.env.DATABASE,
+      password: process.env.PASSWORD,
+      port: process.env.PORT,
+      ssl:true
+    
+    });
+  try{
+      await dbClient.connect();
+      let res = await dbClient.query('INSERT INTO EVENT (number) values('+ event+')');
+      
+      dbClient.end();
+  }catch(err){
+      console.log(err);
+  }
+  
 }
 //Twits all the events top 8 from the tournaments it gets
 async function postTournaments(slugs) {
@@ -545,7 +583,7 @@ async function hourly() {
     let newEvents = await getNewEvents(lastEvents);
     let newCompletedEvents = await getCompletedEvents(newEvents);
     if (newCompletedEvents) {
-      postEvents(newCompletedEvents);
+      //postEvents(newCompletedEvents);
     }
   } catch (err) {
     console.log(err);

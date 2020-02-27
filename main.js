@@ -15,14 +15,7 @@ const graphQLClient = new GraphQLClient(endpoint, {
     Authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
   }
 });
-const dbClient = new Client({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'Events',
-  password: 'password',
-  port: 5432
 
-});
 
 var twitterClient = new Twitter({
   consumer_key: process.env.CONSUMER_KEY,

@@ -148,13 +148,8 @@ async function getNewEvents(eventsId){
   let unpostedEvents = [];
   let events =[];
   const dbClient = new Client({
-    user: process.env.USER,
-    host: process.env.HOST,
-    database: process.env.DATABASE,
-    password: process.env.PASSWORD,
-    port: process.env.PORT,
-    ssl:true
-  
+    connectionString: process.env.DATABASE_URL,
+    ssl: true,
   });
   await dbClient.connect();
   let res = await dbClient.query('SELECT number FROM event');
@@ -461,14 +456,9 @@ async function postTweet(tweet, slug) {
 
 async function addPostedTournaments(event) {
   const dbClient = new Client({
-      user: process.env.USER,
-      host: process.env.HOST,
-      database: process.env.DATABASE,
-      password: process.env.PASSWORD,
-      port: process.env.PORT,
-      ssl:true
-    
-    });
+    connectionString: process.env.DATABASE_URL,
+    ssl: true,
+  });
   try{
       await dbClient.connect();
       let res = await dbClient.query('INSERT INTO EVENT (number) values('+ event+')');

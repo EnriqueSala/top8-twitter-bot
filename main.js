@@ -565,7 +565,7 @@ async function hourly() {
     let newEvents = await getNewEvents(lastEvents);
     let newCompletedEvents = await getCompletedEvents(newEvents);
     if (newCompletedEvents) {
-      //postEvents(newCompletedEvents);
+      postEvents(newCompletedEvents);
     }
   } catch (err) {
     console.log(err);

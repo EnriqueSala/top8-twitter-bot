@@ -563,6 +563,13 @@ async function getEventStandings(eventId) {
               participants {
                   id
                   gamerTag
+                  user{
+                    id
+                    authorizations{
+                      type
+                      url
+                    }
+                  }
                   player {
                       id
                   }

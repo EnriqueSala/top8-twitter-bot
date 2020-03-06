@@ -268,24 +268,50 @@ async function getEventInfo(eventId) {
 
 //Returns the twitter handle and gamertag of a player
 async function getPlayerInfo(playerId) {
+  console.log(playerId);
   playerQuery = `
-  query TournamentQuery($playerId: ID!) {
-		player(id: $playerId){
-      twitterHandle
+  query userQuery($userId: ID!) {
+		user(id: $userId){
+			id
+    authorizations{
+      type
+      url
+    }
+    player{
       gamerTag
+    }
+    }
 		}
-  }`
+  `
 
   playerVariables = `
   {
-    "playerId": `+ playerId + `
+    "userId": `+ playerId + `
   }`
 
-  let playerInfo = await graphQLClient.request(playerQuery, playerVariables);
-
-  return playerInfo.player;
+  let data = await graphQLClient.request(playerQuery, playerVariables);
+  let playerInfo = [];
+  playerInfo.gamerTag ="";
+  playerInfo.twitterHandle="";
+  playerInfo.gamerTag = data.user.player.gamerTag;
+  playerInfo.twitterHandle = await getHandle(data.user.authorizations);
+  return playerInfo;
 }
+async function getHandle(authorizations) {
+  let twitterHandle = null;
+  if(authorizations){
+    for (let i = 0; i < authorizations.length; i++) {
+      let authorization = authorizations[i];
+      if (authorization.type == "TWITTER") {
+        let url = authorization.url;
+        twitterHandle = url.substring(url.lastIndexOf("/") + 1);
+  
+      }
+  }
+  }
+  return twitterHandle;
 
+}
 //Returns a String with the top 8 info to be tweeted
 async function writeTweet(eventId, new_standings) {
   var results = "";
@@ -420,7 +446,7 @@ function parseStandings(event) {
       let participants = entrant.participants;
 
       for (participant in participants) {
-        let player = participants[participant].player;
+        let player = participants[participant].user;
 
         if (participant == 0) {
           player_1_id = player.id;

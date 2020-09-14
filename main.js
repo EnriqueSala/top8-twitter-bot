@@ -16,7 +16,7 @@ const graphQLClient = new GraphQLClient(endpoint, {
   }
 });
 
-
+//twitter client initialization
 var twitterClient = new Twitter({
   consumer_key: process.env.CONSUMER_KEY,
   consumer_secret: process.env.CONSUMER_SECRET,
@@ -57,6 +57,7 @@ async function getLastTournaments() {
   return slugs;
 
 }
+
 //returns all the events Id from multiple tournaments
 async function getAllEventsId(slugs) {
   let eventsId = [];
@@ -181,6 +182,7 @@ async function getCompletedEvents(eventsId) {
   return eventsCompleted;
 }
 
+//tweets multiple event results with a 1 min delay between each tweet  
 async function postEvents(eventsId) {
 
   let eventId;
@@ -193,6 +195,8 @@ async function postEvents(eventsId) {
     let tweet = await writeTweet(eventId, parsedStandings);
 
     postTweet(tweet, eventId);
+
+    //delay is needed because of twitter api
     await wait(60000);
 
 
@@ -543,6 +547,8 @@ async function isEventCompleted(eventId) {
   } else return true;
 
 }
+
+//Gets the standings from graphql in a very specific format 
 async function getEventStandings(eventId) {
   var eventQuery = `
   query EventQuery($id: ID!, $page: Int, $perPage: Int) { 
@@ -590,6 +596,7 @@ async function getEventStandings(eventId) {
   return eventStandings.event;
 }
 
+
 async function hourly() {
   try {
 
@@ -610,8 +617,6 @@ async function hourly() {
 }
 
 async function main() {
-  var j = schedule.scheduleJob('* */1 * * *', function () {
     hourly();
-  });
 }
 main();

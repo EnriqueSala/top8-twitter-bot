@@ -173,7 +173,7 @@ async function getCompletedEvents(eventsId) {
   let eventsCompleted = [];
   let completed;
   for (let i = 0; i < eventsId.length; i++) {
-    event = eventsId[i];
+    let event = eventsId[i];
 
     if (await isEventCompleted(event)) {
       eventsCompleted.push(event);
@@ -485,7 +485,10 @@ async function postTweet(tweet, slug) {
 
 async function addPostedTournaments(event) {
   const dbClient = new Client({
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
   });
   try{
       await dbClient.connect();

@@ -7,11 +7,14 @@ const { GraphQLClient } = require('graphql-request');
 const endpoint = 'https://api.smash.gg/gql/alpha';
 const FILE_LOCATION = './SlugList.txt';
 const TOPNUMBER = 8;
+const { Headers } = require('cross-fetch');
+
+global.Headers = global.Headers || Headers;
 require('dotenv').config()
 const graphQLClient = new GraphQLClient(endpoint, {
   credentials: "include",
   mode: "cors",
-  headers: {
+  Headers: {
     Authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
   }
 });

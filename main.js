@@ -14,8 +14,8 @@ require('dotenv').config()
 const graphQLClient = new GraphQLClient(endpoint, {
   credentials: "include",
   mode: "cors",
-  Headers: {
-    Authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
+  headers: {
+    authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
   }
 });
 

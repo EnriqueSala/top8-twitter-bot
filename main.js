@@ -477,13 +477,24 @@ function parseStandings(event) {
 
 //Tweets the string it gets and writes the other string into a txt file
 async function postTweet(tweet, slug) {
-  twitterClient.post('statuses/update', { status: tweet }, (err, tweet, res) => {
-    if (err) throw err;
-    addPostedTournaments(slug + "\n");
-  });
+  twitterClient.post('statuses/update', { status: tweet })
+  .then(function(tweet){
+    addPostedTournaments(slug + "\n")
+  })
+  .catch(function(error){
+    throw error;
+  })
 
 
 }
+// async function postTweet(tweet, slug) {
+//   twitterClient.post('statuses/update', { status: tweet }, (err, tweet, res) => {
+//     if (err) throw err;
+//     addPostedTournaments(slug + "\n");
+//   });
+
+
+// }
 
 
 async function addPostedTournaments(event) {

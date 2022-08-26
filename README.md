@@ -5,7 +5,7 @@ Follow the bot [here](https://twitter.com/SmashMeridaBot)
 Sample tweet:  
 ![tweet-screenshot](images/screenshot.png)
 
-## Technologies:
+## Technologies
 * Nodejs
 * PostreSQL
 * GraphQL

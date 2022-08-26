@@ -1,8 +1,13 @@
-# top8-twitter-bot
+# Smash top 8 twitter bot
 
-Simple twitter bot that tweets the top 8 results of local tournaments in Mérida city.  
-Uses the smash.gg API to get all the information.  
-Follow the bot at https://twitter.com/SmashMeridaBot  
-Sample tweet: 
+Twitter bot that tweets the top 8 results of smash bros tournaments in Mérida city.  
+Uses the start.gg API to get all the information.  
+Follow the bot [here](https://twitter.com/SmashMeridaBot)  
+Sample tweet:  
+[tweet-screenshot]: images/screenshot.png
 
-Currently disabled since there are no offline tournaments :(
+## Technologies used
+* Nodejs
+* PostreSQL
+* GraphQL
+* RESTful APIs [start.gg](https://developer.start.gg/reference/query.doc.html)

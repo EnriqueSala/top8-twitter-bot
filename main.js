@@ -15,7 +15,7 @@ const graphQLClient = new GraphQLClient(endpoint, {
   credentials: "include",
   mode: "cors",
   headers: {
-    authorization: `Bearer ${process.env.SMASHGG_TOKEN}`
+    authorization: `Bearer f8073576ef563d2e64917ca97b132315`
   }
 });
 

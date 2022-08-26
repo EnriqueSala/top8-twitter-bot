@@ -10,4 +10,4 @@ Sample tweet:
 * Nodejs
 * PostreSQL
 * GraphQL
-* RESTful APIs [start.gg](https://developer.start.gg/reference/query.doc.html)
+* RESTful APIs ([start.gg](https://developer.start.gg/reference/query.doc.html) & Twitter)
